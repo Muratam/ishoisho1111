@@ -136,9 +136,12 @@ func main() {
 		// shorten description
 		var sdProducts []Product
 		for _, p := range products {
-			if utf8.RuneCountInString(p.Description) > 70 {
-				p.Description = string([]rune(p.Description)[:70]) + "…"
+			if len(p.Description) > 210 {
+				p.Description = p.Description[:210] + "…"
 			}
+			//if utf8.RuneCountInString(p.Description) > 70 {
+			//	p.Description = string([]rune(p.Description)[:70]) + "…"
+			//}
 			sdProducts = append(sdProducts, p)
 		}
 
