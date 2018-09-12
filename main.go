@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"unicode/utf8"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -220,5 +221,6 @@ func main() {
 		c.String(http.StatusOK, "Finish")
 	})
 
+	pprof.Register(r)
 	r.Run(":8080")
 }
