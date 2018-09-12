@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/sessions"
-	"github.com/gin-gonic/contrib/static"
+	//"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -27,8 +27,8 @@ func main() {
 
 	r := gin.Default()
 	// load templates
-	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
-	r.Use(static.Serve("/images", static.LocalFile("public/images", true)))
+	//r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
+	//r.Use(static.Serve("/images", static.LocalFile("public/images", true)))
 	layout := "templates/layout.tmpl"
 
 	// session store
