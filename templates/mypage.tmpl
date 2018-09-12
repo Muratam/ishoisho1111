@@ -1,4 +1,4 @@
-{{ define "content" }}
+{{ template "header" .}}
 <div class="jumbotron">
   <div class="container">
     <h2>{{ .User.Name }} さんの購入履歴</h2>
@@ -42,4 +42,4 @@
     {{ end }}
   </div>
 </div>
-{{ end }}
+{{ template "footer"}}
