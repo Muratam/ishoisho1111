@@ -119,7 +119,6 @@ func main() {
 		})
 	})
 
-	dDict := make(map[string]string)
 	// GET /users/:userId
 	r.GET("/users/:userId", func(c *gin.Context) {
 		cUser := currentUser(sessions.Default(c))
@@ -137,16 +136,12 @@ func main() {
 		// shorten description
 		var sdProducts []Product
 		for _, p := range products {
-			key := p.Description
-			val, ok := dDict[key]
-			if ok {
-				p.Description = val
-			} else {
-				if utf8.RuneCountInString(p.Description) > 70 {
-					p.Description = string([]rune(p.Description)[:70]) + "…"
-				}
-				dDict[key] = p.Description
+			if len(p.Description) > 210 {
+				p.Description = p.Description[:210] + "…"
 			}
+			//if utf8.RuneCountInString(p.Description) > 70 {
+			//	p.Description = string([]rune(p.Description)[:70]) + "…"
+			//}
 			sdProducts = append(sdProducts, p)
 		}
 
