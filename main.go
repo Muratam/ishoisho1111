@@ -139,12 +139,11 @@ func main() {
 
 		var contentsBuffer []byte
 		for i, p := range products {
-			// if len(p.Description) > 210 {
-			// 	p.Description = p.Description[:210] + "…"
-			// }
-			// sdProducts = append(sdProducts, p)
 			if i >= 30 {
 				break
+			}
+			if len(p.Description) > 210 {
+				p.Description = p.Description[:210] + "…"
 			}
 			pID := strconv.Itoa(p.ID)
 			contentsBuffer = append(contentsBuffer, (`
@@ -182,7 +181,7 @@ func main() {
 		c.HTML(http.StatusOK, "mypage.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"User":        user,
-			"Contents":    string(contentsBuffer),
+			"Contents":    template.HTML(contentsBuffer),
 			"TotalPay":    totalPay,
 		})
 	})
