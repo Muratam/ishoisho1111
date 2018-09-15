@@ -45,7 +45,7 @@ func initializeHistoryMap() {
 	historyMap = make(map[int][]Product)
 	rows, err := db.Query("SELECT p.id, p.name, p.description, p.image_path, p.price, h.user_id, h.created_at "+
 		"FROM histories as h "+
-		"LEFT OUTER JOIN products as p "+
+		"INNER JOIN products as p "+
 		"ON h.product_id = p.id "+
 		"ORDER BY h.id DESC")
 	if err != nil {
