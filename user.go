@@ -104,9 +104,9 @@ func (u *User) CreateComment(pid string, content string) {
 	db.Exec(
 		"INSERT INTO paged_comments (page, product_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)",
 		(10000-ipid)/50, pid, u.ID, content, time.Now())
-	cs := pagedComments[ipid / 50]
+	cs := pagedComments[(10000 - ipid) / 50]
 	name := users[u.ID - 1].Name
-	pagedComments[ipid / 50] = append(cs, PagedCommentWriter{ipid, CommentWriter{content, name}})
+	pagedComments[(10000 - ipid) / 50] = append(cs, PagedCommentWriter{ipid, CommentWriter{content, name}})
 }
 
 func (u *User) UpdateLastLogin() {

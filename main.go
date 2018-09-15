@@ -39,7 +39,7 @@ func initializePagedProduct() {
 		if err != nil {
 			panic("Failed to initialize paged products: Failed to scan a product: " + err.Error())
 		}
-		p.Page = p.ID / 50
+		p.Page = (10000 - p.ID) / 50
 		ps := pagedProducts[p.Page]
 		if ps == nil {
 			ps = make([]PagedProductWithComments, 0, 50)
@@ -62,7 +62,7 @@ func initializePagedComments() {
 		if err != nil {
 			panic("Failed to initialize paged comments: Failed to scan a comment")
 		}
-		page := cw.PID / 50
+		page := (10000 - cw.PID) / 50
 		cs := pagedComments[page]
 		if cs == nil {
 			cs = make([]PagedCommentWriter, 0, 100)
