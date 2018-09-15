@@ -75,11 +75,11 @@ func (u *User) BuyingHistory() (products []Product) {
 	if !ok {
 		return nil
 	}
-	for _, p := range ps {
-		products = append([]Product{p}, ps...)
+	products = make([]Product, len(ps))
+	for i, v := range ps {
+		products[i] = v
 	}
-
-	return
+	return products
 }
 
 // BuyProduct : buy product
