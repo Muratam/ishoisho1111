@@ -77,7 +77,7 @@ func (u *User) BuyingHistory() (products []Product) {
 	}
 	products = make([]Product, len(ps))
 	for i, v := range ps {
-		products[len(ps) - i - 1] = v
+		products[i] = v
 	}
 	return products
 }

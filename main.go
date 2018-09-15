@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"time"
 
-	"html"
 	"html/template"
 	"net/http"
 	"os"
 	"strconv"
+
 	// "unicode/utf8"
 
 	"github.com/gin-contrib/pprof"
@@ -124,13 +124,11 @@ func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 	}
 	return contentsBuffer
 }
-func enmbedMyPage(products []Product, isMe bool) []byte {
-	var contentsBuffer []byte
-	for i, p := range products {
-		if i == 0 {
-			continue
-		}
-		if i >= 30+1 {
+func dangerounsEnmbedMyPage(products []Product, isMe bool) []byte {
+	//var contentsBuffer []byte
+	contentsBuffer := make([]byte, 0, len(products)*100)
+  for i, p := range products {
+		if i >= 30 {
 			break
 		}
 		if len(p.Description) > 210 {
@@ -141,14 +139,14 @@ func enmbedMyPage(products []Product, isMe bool) []byte {
 		<div class="col-md-4">
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
+					<a href="/products/` + pID + `">` + p.Name + `</a>
 				</div>
 				<div class="panel-body">
 					<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
 					<h4>価格</h4>
 					<p>` + strconv.Itoa(p.Price) + `円</p>
 					<h4>商品説明</h4>
-					<p>` + html.EscapeString(p.Description) + `</p>
+					<p>` + p.Description + `</p>
 					<h4>購入日時</h4>
 					<p>` + p.CreatedAt + `</p>
 				</div>
@@ -272,13 +270,10 @@ func main() {
 		products := user.BuyingHistory()
 
 		var totalPay int
-		for i, p := range products {
-			if i == 0 {
-				continue
-			}
+		for _, p := range products {
 			totalPay += p.Price
 		}
-		contentsBuffer := enmbedMyPage(products, user.ID == cUser.ID)
+		contentsBuffer := dangerounsEnmbedMyPage(products, user.ID == cUser.ID)
 		c.HTML(http.StatusOK, "mypage.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"User":        user,
