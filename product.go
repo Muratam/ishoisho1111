@@ -58,7 +58,7 @@ func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 
 	// select 50 products with offset page*50
 	products := []PagedProductWithComments{}
-	prows, err := tx.Query("SELECT * FROM paged_products ORDER BY id DESC WHERE page = ?", page)
+	prows, err := tx.Query("SELECT * FROM paged_products WHERE page = ? ORDER BY id DESC", page)
 	if err != nil {
 		return nil
 	}
@@ -80,7 +80,7 @@ func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 	}
 
 	crows, err := tx.Query("SELECT * FROM paged_comments AS c INNER JOIN users AS u ON c.user_id = u.id "+
-		"ORDER BY c.created_at DESC WHERE c.page = ?", page)
+		"WHERE c.page = ? ORDER BY c.created_at DESC", page)
 	if err != nil {
 		return nil
 	}
