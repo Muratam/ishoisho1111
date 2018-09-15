@@ -56,7 +56,11 @@ func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 		productMap[p.ID] = p
 	}
 
-	cs := pagedComments[page]
+	tmp := pagedComments[page]
+	cs := make([]PagedCommentWriter, len(tmp))
+	for i, v := range tmp {
+		cs[len(tmp) - i - 1] = v
+	}
 	for _, c := range cs {
 		p := productMap[c.PID]
 		p.CommentCount += 1
