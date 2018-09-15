@@ -272,7 +272,7 @@ func main() {
 		for _, p := range products {
 			totalPay += p.Price
 		}
-		contentsBuffer := enmbedMyPage(products, user.ID == cUser.ID)
+		contentsBuffer := dangerounsEnmbedMyPage(products, user.ID == cUser.ID)
 		c.HTML(http.StatusOK, "mypage.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"User":        user,
