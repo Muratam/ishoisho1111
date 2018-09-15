@@ -71,10 +71,11 @@ func unsafeParseDate(date string) (time.Time, error) {
 
 // BuyingHistory : products which user had bought
 func (u *User) BuyingHistory() (products []Product) {
-	ps, ok := historyMap[u.ID]
+	ps_, ok := historyMap.Load(u.ID)
 	if !ok {
 		return nil
 	}
+	ps := ps_.([]Product)
 	products = make([]Product, len(ps))
 	for i, v := range ps {
 		products[i] = v
@@ -87,15 +88,19 @@ func (u *User) BuyProduct(pid string) {
 	db.Exec(
 		"INSERT INTO histories (product_id, user_id, created_at) VALUES (?, ?, ?)",
 		pid, u.ID, time.Now())
-	ps, ok := historyMap[u.ID]
+	ps_, ok := historyMap.Load(u.ID)
+	var ps []Product
 	if !ok {
 		ps = []Product{}
+	} else {
+		ps = ps_.([]Product)
 	}
 	ipid, _ := strconv.Atoi(pid)
-	p, _ := productMap[ipid]
+	p_, _ := productMap.Load(ipid)
+	p := p_.(Product)
 	fmt := "2006-01-02 15:04:05"
 	p.CreatedAt = (time.Now().Add(9 * time.Hour)).Format(fmt)
-	historyMap[u.ID] = append([]Product{p}, ps...)
+	historyMap.Store(u.ID, append([]Product{p}, ps...))
 }
 
 // CreateComment : create comment to the product

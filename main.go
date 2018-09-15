@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"time"
-
 	"html/template"
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
+	"time"
 
 	// "unicode/utf8"
 
@@ -20,11 +20,11 @@ import (
 )
 
 var db *sql.DB
-var productMap map[int]Product
-var historyMap map[int][]Product
+var productMap sync.Map
+var historyMap sync.Map
 
 func initializeProdutMap() {
-	productMap = make(map[int]Product)
+	productMap = sync.Map{}
 	rows, err := db.Query("SELECT * FROM products")
 	if err != nil {
 		panic("Failed to select products: " + err.Error())
@@ -37,12 +37,12 @@ func initializeProdutMap() {
 		if err != nil {
 			panic("Failed to scan a product: " + err.Error())
 		}
-		productMap[p.ID] = p
+		productMap.Store(p.ID, p)
 	}
 }
 
 func initializeHistoryMap() {
-	historyMap = make(map[int][]Product)
+	historyMap = sync.Map{}
 	rows, err := db.Query("SELECT p.id, p.name, p.description, p.image_path, p.price, h.user_id, h.created_at " +
 		"FROM histories as h " +
 		"INNER JOIN products as p " +
@@ -64,11 +64,14 @@ func initializeHistoryMap() {
 		tmp, _ := time.Parse(fmt, h.CreatedAt)
 		h.Product.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
 
-		ps, ok := historyMap[h.UserID]
+		ps_, ok := historyMap.Load(h.UserID)
+		var ps []Product
 		if !ok {
 			ps = []Product{}
+		} else {
+			ps = ps_.([]Product)
 		}
-		historyMap[h.UserID] = append(ps, h.Product)
+		historyMap.Store(h.UserID, append(ps, h.Product))
 	}
 }
 
