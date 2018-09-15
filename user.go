@@ -33,7 +33,13 @@ func authenticate(email string, password string) (User, bool) {
 }
 
 func notAuthenticated(session sessions.Session) bool {
+	if session == nil {
+		return true
+	}
 	uid := session.Get("uid")
+	if uid == nil {
+		return true
+	}
 	return !(uid.(int) > 0)
 }
 
