@@ -24,9 +24,10 @@ func main() {
 	// database setting
 	user := os.Getenv("ISHOCON1_DB_USER")
 	pass := os.Getenv("ISHOCON1_DB_PASSWORD")
-	db_server := os.Getenv("ISHOCON1_DB_SERVER")
+	host := os.Getenv("ISHOCON1_DB_HOST")
+	port := os.Getenv("ISHOCON1_DB_PORT")
 	dbname := "ishocon1"
-	db, _ = sql.Open("mysql", user+":"+pass+"@tcp("+db_server+":3306)/"+dbname)
+	db, _ = sql.Open("mysql", user+":"+pass+"@tcp("+host+":"+port+")/"+dbname)
 	db.SetMaxIdleConns(5)
 	//gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
