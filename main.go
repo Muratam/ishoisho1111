@@ -119,7 +119,7 @@ func main() {
 	dbname := "ishocon1"
 	db, _ = sql.Open("mysql", user+":"+pass+"@/"+dbname)
 	db.SetMaxIdleConns(5)
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	// load templates
 	r.LoadHTMLGlob("templates/*")
