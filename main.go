@@ -186,8 +186,10 @@ func main() {
 
 	initializeHistoryMap()
 	initializeProdutMap()
-	r := gin.Default()
-	// load templates
+	//r := gin.Default()
+  r := gin.New()
+  r.Use(gin.Recovery())
+  // load templates
 	r.LoadHTMLGlob("templates/*")
 	//r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
 	//r.Use(static.Serve("/images", static.LocalFile("public/images", true)))
