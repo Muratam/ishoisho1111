@@ -191,7 +191,6 @@ func main() {
 		}
 		products := getProductsWithCommentsAt(page)
 		contentsBuffer := embedIndexPage(products, cUser.ID > 0)
-		//r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/index.tmpl")))
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"Contents":    template.HTML(contentsBuffer),

@@ -52,6 +52,15 @@ func currentUser(session sessions.Session) User {
 
 	return u
 }
+func unsafeParseDate(date string) (time.Time, error) {
+	year := (((int(date[0])-'0')*10+int(date[1])-'0')*10+int(date[2])-'0')*10 + int(date[3]) - '0'
+	month := time.Month((int(date[5])-'0')*10 + int(date[6]) - '0')
+	day := (int(date[8])-'0')*10 + int(date[9]) - '0'
+	hour := (int(date[11])-'0')*10 + int(date[12]) - '0'
+	minute := (int(date[14])-'0')*10 + int(date[15]) - '0'
+	second := (int(date[17])-'0')*10 + int(date[18]) - '0'
+	return time.Date(year, month, day, hour, minute, second, 0, time.UTC), nil
+}
 
 // BuyingHistory : products which user had bought
 func (u *User) BuyingHistory() (products []Product) {
@@ -73,6 +82,7 @@ func (u *User) BuyingHistory() (products []Product) {
 		fmt := "2006-01-02 15:04:05"
 		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &cAt)
 		tmp, _ := time.Parse(fmt, cAt)
+		// tmp, _ := unsafeParseDate(cAt)
 		p.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
 		if err != nil {
 			panic(err.Error())
