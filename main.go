@@ -99,7 +99,7 @@ func main() {
 		}
 		products := getProductsWithCommentsAt(page)
 		// shorten description and comment
-		var sProducts []ProductWithComments
+		var sProducts []PagedProductWithComments
 		for _, p := range products {
 			if utf8.RuneCountInString(p.Description) > 70 {
 				p.Description = string([]rune(p.Description)[:70]) + "…"
@@ -252,6 +252,29 @@ func main() {
 		db.Exec("DELETE FROM products WHERE id > 10000")
 		db.Exec("DELETE FROM comments WHERE id > 200000")
 		db.Exec("DELETE FROM histories WHERE id > 500000")
+
+		db.Exec("DELETE FROM paged_products")
+		db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) "+
+			"VALUES (i, pa, na, de, im, pr, cr) SELECT "+
+			"products.id as i, "+
+			"(9999 - products.id) DIV 50 as pa, "+
+			"products.name as na, "+
+			"products.description as de, "+
+			"products.image_path as im, "+
+			"products.price as pr, "+
+			"products.created_at as cr "+
+			"FROM products")
+
+		db.Exec("DELETE FROM paged_comments")
+		db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) "+
+			"VALUES (i, pa, pid, uid, con, cat) SELECT "+
+			"comments.id as i, "+
+			"(9999 - comments.product_id) DIV 50 as pa, "+
+			"comments.product_id as pid, "+
+			"comments.user_id as uid, "+
+			"comments.content as con, "+
+			"comments.created_at as cat "+
+			"FROM comments")
 
 		c.String(http.StatusOK, "Finish")
 	})
