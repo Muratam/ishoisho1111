@@ -125,7 +125,7 @@ func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 	return contentsBuffer
 }
 func enmbedMyPage(products []Product, isMe bool) []byte {
-	var contentsBuffer []byte
+	contentsBuffer := make([]byte, len(products))
 	for i, p := range products {
 		if i == 0 {
 			continue
