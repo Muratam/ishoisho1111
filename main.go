@@ -255,15 +255,15 @@ func main() {
 
 		db.Exec("DELETE FROM paged_products")
 		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) "+
-			"VALUES (i, pa, na, de, im, pr, cr SELECT "+
-			"products.id as i, "+
-			"(9999 - products.id) DIV 50 as pa, "+
-			"products.name as na, "+
-			"products.description as de, "+
-			"products.image_path as im, "+
-			"products.price as pr, "+
-			"products.created_at as cr "+
-			"FROM products)")
+			"SELECT "+
+			"products.id, "+
+			"(9999 - products.id) DIV 50, "+
+			"products.name, "+
+			"products.description, "+
+			"products.image_path, "+
+			"products.price, "+
+			"products.created_at "+
+			"FROM products")
 		if err != nil {
 			c.Error(err)
 			return
@@ -271,14 +271,14 @@ func main() {
 
 		db.Exec("DELETE FROM paged_comments")
 		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) "+
-			"VALUES (i, pa, pid, uid, con, cat SELECT "+
-			"comments.id as i, "+
-			"(9999 - comments.product_id) DIV 50 as pa, "+
-			"comments.product_id as pid, "+
-			"comments.user_id as uid, "+
-			"comments.content as con, "+
-			"comments.created_at as cat "+
-			"FROM comments)")
+			"SELECT "+
+			"comments.id, "+
+			"(9999 - comments.product_id) DIV 50, "+
+			"comments.product_id, "+
+			"comments.user_id, "+
+			"comments.content, "+
+			"comments.created_at "+
+			"FROM comments")
 		if err != nil {
 			c.Error(err)
 			return
