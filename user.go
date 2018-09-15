@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/contrib/sessions"
@@ -92,9 +93,10 @@ func (u *User) BuyProduct(pid string) {
 
 // CreateComment : create comment to the product
 func (u *User) CreateComment(pid string, content string) {
+	ipid, _ := strconv.Atoi(pid)
 	db.Exec(
-		"INSERT INTO comments (product_id, user_id, content, created_at) VALUES (?, ?, ?, ?)",
-		pid, u.ID, content, time.Now())
+		"INSERT INTO paged_comments (page, product_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)",
+		(10000 - ipid) / 50, pid, u.ID, content, time.Now())
 }
 
 func (u *User) UpdateLastLogin() {
