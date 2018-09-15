@@ -257,7 +257,7 @@ func main() {
 		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) "+
 			"SELECT "+
 			"products.id, "+
-			"(9999 - products.id) DIV 50, "+
+			"(10000 - products.id) DIV 50, "+
 			"products.name, "+
 			"products.description, "+
 			"products.image_path, "+
@@ -273,7 +273,7 @@ func main() {
 		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) "+
 			"SELECT "+
 			"comments.id, "+
-			"(9999 - comments.product_id) DIV 50, "+
+			"(10000 - comments.product_id) DIV 50, "+
 			"comments.product_id, "+
 			"comments.user_id, "+
 			"comments.content, "+
