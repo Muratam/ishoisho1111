@@ -67,7 +67,7 @@ func (u *User) BuyingHistory() (products []Product) {
 		return nil
 	}
 	for _, p := range ps {
-		products = append([]Product{p}, ps...)
+		products = append([]Product{p}, products...)
 	}
 
 	return
@@ -85,7 +85,7 @@ func (u *User) BuyProduct(pid string) {
 	ipid, _ := strconv.Atoi(pid)
 	p, _ := productMap[ipid]
 	fmt := "2006-01-02 15:04:05"
-	p.CreatedAt = (time.Now().Add(9 * time.Hour)).Format(fmt)
+	p.CreatedAt = time.Now().Format(fmt)
 	historyMap[u.ID] = append([]Product{p}, ps...)
 }
 
