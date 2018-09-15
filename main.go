@@ -29,7 +29,7 @@ func main() {
 	dbname := "ishocon1"
 	db, _ = sql.Open("mysql", user+":"+pass+"@tcp("+host+":"+port+")/"+dbname)
 	db.SetMaxIdleConns(5)
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	// load templates
 	r.LoadHTMLGlob("templates/*")
@@ -101,7 +101,7 @@ func main() {
 		}
 		products := getProductsWithCommentsAt(page)
 		// shorten description and comment
-		var sProducts []ProductWithComments
+		var sProducts []PagedProductWithComments
 		for _, p := range products {
 			if utf8.RuneCountInString(p.Description) > 70 {
 				p.Description = string([]rune(p.Description)[:70]) + "…"
@@ -254,6 +254,37 @@ func main() {
 		db.Exec("DELETE FROM products WHERE id > 10000")
 		db.Exec("DELETE FROM comments WHERE id > 200000")
 		db.Exec("DELETE FROM histories WHERE id > 500000")
+
+		db.Exec("DELETE FROM paged_products")
+		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) " +
+			"SELECT " +
+			"products.id, " +
+			"(10000 - products.id) DIV 50, " +
+			"products.name, " +
+			"products.description, " +
+			"products.image_path, " +
+			"products.price, " +
+			"products.created_at " +
+			"FROM products")
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		db.Exec("DELETE FROM paged_comments")
+		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) " +
+			"SELECT " +
+			"comments.id, " +
+			"(10000 - comments.product_id) DIV 50, " +
+			"comments.product_id, " +
+			"comments.user_id, " +
+			"comments.content, " +
+			"comments.created_at " +
+			"FROM comments")
+		if err != nil {
+			c.Error(err)
+			return
+		}
 
 		c.String(http.StatusOK, "Finish")
 	})
