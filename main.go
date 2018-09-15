@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"unicode/utf8"
+	// "unicode/utf8"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/sessions"
@@ -23,13 +23,20 @@ var db *sql.DB
 func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 	var contentsBuffer []byte
 	for _, p := range products {
-		if utf8.RuneCountInString(p.Description) > 70 {
-			p.Description = string([]rune(p.Description)[:70]) + "…"
+		//if utf8.RuneCountInString(p.Description) > 70 {
+		//	p.Description = string([]rune(p.Description)[:70]) + "…"
+		//}
+		if len(p.Description) > 210 {
+			p.Description = p.Description[:210] + "…"
 		}
+
 		comments := ""
 		for _, c := range p.Comments {
-			if utf8.RuneCountInString(c.Content) > 25 {
-				c.Content = string([]rune(c.Content)[:25]) + "…"
+			//if utf8.RuneCountInString(c.Content) > 25 {
+			//	c.Content = string([]rune(c.Content)[:25]) + "…"
+			//}
+			if len(c.Content) > 75 {
+				c.Content = c.Content[:75] + "…"
 			}
 			comments += `<li>` + c.Content + ` by ` + c.Writer + `</li>`
 		}

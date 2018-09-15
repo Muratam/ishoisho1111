@@ -82,8 +82,8 @@ func (u *User) BuyingHistory() (products []Product) {
 		var cAt string
 		fmt := "2006-01-02 15:04:05"
 		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &cAt)
-		tmp, _ := time.Parse(fmt, cAt)
-		// tmp, _ := unsafeParseDate(cAt)
+		// tmp, _ := time.Parse(fmt, cAt)
+		tmp, _ := unsafeParseDate(cAt)
 		p.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
 		if err != nil {
 			panic(err.Error())
@@ -106,7 +106,7 @@ func (u *User) CreateComment(pid string, content string) {
 	ipid, _ := strconv.Atoi(pid)
 	db.Exec(
 		"INSERT INTO paged_comments (page, product_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)",
-		(10000 - ipid) / 50, pid, u.ID, content, time.Now())
+		(10000-ipid)/50, pid, u.ID, content, time.Now())
 }
 
 func (u *User) UpdateLastLogin() {
