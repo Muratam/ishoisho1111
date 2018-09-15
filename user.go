@@ -71,6 +71,7 @@ func unsafeParseDate(date string) (time.Time, error) {
 
 // BuyingHistory : products which user had bought
 func (u *User) BuyingHistory() (products []Product) {
+	products = make([]Product, 0, 10000)
 	ps, ok := historyMap[u.ID]
 	if !ok {
 		return nil
