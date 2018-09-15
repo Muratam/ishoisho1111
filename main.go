@@ -26,14 +26,13 @@ func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 		if utf8.RuneCountInString(p.Description) > 70 {
 			p.Description = string([]rune(p.Description)[:70]) + "…"
 		}
-		var newCW []CommentWriter
+		comments := ""
 		for _, c := range p.Comments {
 			if utf8.RuneCountInString(c.Content) > 25 {
 				c.Content = string([]rune(c.Content)[:25]) + "…"
 			}
-			newCW = append(newCW, c)
+			comments += `<li>` + c.Content + ` by ` + c.Writer + `</li>`
 		}
-		p.Comments = newCW
 		pID := strconv.Itoa(p.ID)
 		contentsBuffer = append(contentsBuffer, (`
 			<div class="col-md-4">
@@ -48,8 +47,7 @@ func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 						<h4>商品説明</h4>
 						<p>` + p.Description + `</p>
 						<h4>` + strconv.Itoa(p.CommentCount) + `件のレビュー</h4>
-						<ul>
-						</ul>
+						<ul>` + comments + `</ul>
 					</div>
 		`)...)
 		if loggedIn {
