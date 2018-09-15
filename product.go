@@ -45,7 +45,7 @@ func getProduct(pid int) Product {
 func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 	var err error
 	tx, err := db.Begin()
-	defer func(){
+	defer func() {
 		if err != nil {
 			tx.Rollback()
 		} else {
@@ -79,7 +79,7 @@ func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 		productMap[p.ID] = p
 	}
 
-	crows, err := tx.Query("SELECT * FROM paged_comments AS c INNER JOIN users AS u ON c.user_id = u.id "+
+	crows, err := tx.Query("SELECT product_id,content,name FROM paged_comments AS c INNER JOIN users AS u ON c.user_id = u.id "+
 		"WHERE c.page = ? ORDER BY c.created_at DESC", page)
 	if err != nil {
 		return nil
@@ -87,11 +87,9 @@ func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
 
 	defer crows.Close()
 	for crows.Next() {
-		var i int
-		var s string
 		var pid int
 		cw := CommentWriter{}
-		err = crows.Scan(&i, &i, &pid, &i, &cw.Content, &s, &i, &cw.Writer, &s, &s, &s)
+		err = crows.Scan(&pid, &cw.Content, &cw.Writer)
 		if err != nil {
 			return nil
 		}
