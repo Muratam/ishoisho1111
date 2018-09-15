@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"time"
 
 	"html"
 	"html/template"
@@ -19,6 +20,58 @@ import (
 )
 
 var db *sql.DB
+var productMap map[int]Product
+var historyMap map[int][]Product
+
+func initializeProdutMap() {
+	productMap = make(map[int]Product)
+	rows, err := db.Query("SELECT * FROM products")
+	if err != nil {
+		panic("Failed to select products: " + err.Error())
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		p := Product{}
+		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &p.CreatedAt)
+		if err != nil {
+			panic("Failed to scan a product: " + err.Error())
+		}
+		productMap[p.ID] = p
+	}
+}
+
+func initializeHistoryMap() {
+	historyMap = make(map[int][]Product)
+	rows, err := db.Query("SELECT p.id, p.name, p.description, p.image_path, p.price, h.user_id, h.created_at "+
+		"FROM histories as h "+
+		"LEFT OUTER JOIN products as p "+
+		"ON h.product_id = p.id "+
+		"ORDER BY h.id DESC")
+	if err != nil {
+		panic("Failed to select histories: " + err.Error())
+	}
+
+
+	defer rows.Close()
+	for rows.Next() {
+		h := History{}
+		err = rows.Scan(&h.Product.ID, &h.Product.Name, &h.Product.Description, &h.Product.ImagePath, &h.Product.Price,
+			&h.UserID, &h.CreatedAt)
+		if err != nil {
+			panic("Failed to scan history: " + err.Error())
+		}
+		fmt := "2006-01-02 15:04:05"
+		tmp, _ := time.Parse(fmt, h.CreatedAt)
+		h.Product.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
+
+		ps, ok := historyMap[h.UserID]
+		if !ok {
+			ps = []Product{}
+		}
+		historyMap[h.UserID] = append(ps, h.Product)
+	}
+}
 
 func main() {
 	// database setting
@@ -27,6 +80,10 @@ func main() {
 	dbname := "ishocon1"
 	db, _ = sql.Open("mysql", user+":"+pass+"@/"+dbname)
 	db.SetMaxIdleConns(5)
+
+	initializeHistoryMap()
+	initializeProdutMap()
+
 	//gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	// load templates
@@ -283,6 +340,9 @@ func main() {
 			c.Error(err)
 			return
 		}
+
+		initializeHistoryMap()
+		initializeProdutMap()
 
 		c.String(http.StatusOK, "Finish")
 	})
