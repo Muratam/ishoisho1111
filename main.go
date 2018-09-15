@@ -65,9 +65,11 @@ func initializeHistoryMap() {
 		h.Product.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
 
 		ps_, ok := historyMap.Load(h.UserID)
-		ps := ps_.([]Product)
+		var ps []Product
 		if !ok {
 			ps = []Product{}
+		} else {
+			ps = ps_.([]Product)
 		}
 		historyMap.Store(h.UserID, append(ps, h.Product))
 	}
