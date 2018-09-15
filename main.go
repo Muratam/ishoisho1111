@@ -20,6 +20,98 @@ import (
 
 var db *sql.DB
 
+func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
+	var contentsBuffer []byte
+	for _, p := range products {
+		if utf8.RuneCountInString(p.Description) > 70 {
+			p.Description = string([]rune(p.Description)[:70]) + "…"
+		}
+		var newCW []CommentWriter
+		for _, c := range p.Comments {
+			if utf8.RuneCountInString(c.Content) > 25 {
+				c.Content = string([]rune(c.Content)[:25]) + "…"
+			}
+			newCW = append(newCW, c)
+		}
+		p.Comments = newCW
+		pID := strconv.Itoa(p.ID)
+		contentsBuffer = append(contentsBuffer, (`
+			<div class="col-md-4">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<a href="/products/` + pID + `">` + p.Name + `</a>
+					</div>
+					<div class="panel-body">
+						<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
+						<h4>価格</h4>
+						<p>` + strconv.Itoa(p.Price) + `円</p>
+						<h4>商品説明</h4>
+						<p>` + p.Description + `</p>
+						<h4>` + strconv.Itoa(p.CommentCount) + `件のレビュー</h4>
+						<ul>
+						</ul>
+					</div>
+		`)...)
+		if loggedIn {
+			contentsBuffer = append(contentsBuffer, (`
+				<div class="panel-footer">
+					<form method="POST" action="/products/buy/` + pID + `">
+						<fieldset>
+							<input class="btn btn-success btn-block" type="submit" name="buy" value="購入" />
+						</fieldset>
+					</form>
+				</div>
+			`)...)
+		}
+		contentsBuffer = append(contentsBuffer, `</div> </div>`...)
+	}
+	return contentsBuffer
+}
+func enmbedMyPage(products []Product, isMe bool) []byte {
+	var contentsBuffer []byte
+	for i, p := range products {
+		if i >= 30 {
+			break
+		}
+		if len(p.Description) > 210 {
+			p.Description = p.Description[:210] + "…"
+		}
+		pID := strconv.Itoa(p.ID)
+		contentsBuffer = append(contentsBuffer, (`
+		<div class="col-md-4">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
+				</div>
+				<div class="panel-body">
+					<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
+					<h4>価格</h4>
+					<p>` + strconv.Itoa(p.Price) + `円</p>
+					<h4>商品説明</h4>
+					<p>` + html.EscapeString(p.Description) + `</p>
+					<h4>購入日時</h4>
+					<p>` + p.CreatedAt + `</p>
+				</div>
+		`)...)
+		if isMe {
+			contentsBuffer = append(contentsBuffer, (`
+				<div class="panel-footer">
+					<form method="POST" action="/comments/` + pID + `">
+						<fieldset>
+							<div class="form-group">
+								<input class="form-control" placeholder="Comment Here" name="content" value="">
+							</div>
+							<input class="btn btn-success btn-block" type="submit" name="send_comment" value="コメントを送信" />
+						</fieldset>
+					</form>
+				</div>
+			`)...)
+		}
+		contentsBuffer = append(contentsBuffer, `</div> </div>`...)
+	}
+	return contentsBuffer
+}
+
 func main() {
 	// database setting
 	user := os.Getenv("ISHOCON1_DB_USER")
@@ -98,28 +190,10 @@ func main() {
 			page = 0
 		}
 		products := getProductsWithCommentsAt(page)
-		// shorten description and comment
-		var sProducts []PagedProductWithComments
-		for _, p := range products {
-			if utf8.RuneCountInString(p.Description) > 70 {
-				p.Description = string([]rune(p.Description)[:70]) + "…"
-			}
-
-			var newCW []CommentWriter
-			for _, c := range p.Comments {
-				if utf8.RuneCountInString(c.Content) > 25 {
-					c.Content = string([]rune(c.Content)[:25]) + "…"
-				}
-				newCW = append(newCW, c)
-			}
-			p.Comments = newCW
-			sProducts = append(sProducts, p)
-		}
-
-		//r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/index.tmpl")))
+		contentsBuffer := embedIndexPage(products, cUser.ID > 0)
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
 			"CurrentUser": cUser,
-			"Products":    sProducts,
+			"Contents":    template.HTML(contentsBuffer),
 		})
 	})
 
@@ -136,48 +210,7 @@ func main() {
 		for _, p := range products {
 			totalPay += p.Price
 		}
-
-		var contentsBuffer []byte
-		for i, p := range products {
-			if i >= 30 {
-				break
-			}
-			if len(p.Description) > 210 {
-				p.Description = p.Description[:210] + "…"
-			}
-			pID := strconv.Itoa(p.ID)
-			contentsBuffer = append(contentsBuffer, (`
-			<div class="col-md-4">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
-					</div>
-					<div class="panel-body">
-						<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
-						<h4>価格</h4>
-						<p>` + strconv.Itoa(p.Price) + `円</p>
-						<h4>商品説明</h4>
-						<p>` + html.EscapeString(p.Description) + `</p>
-						<h4>購入日時</h4>
-						<p>` + p.CreatedAt + `</p>
-					</div>
-			`)...)
-			if user.ID == cUser.ID {
-				contentsBuffer = append(contentsBuffer, (`
-					<div class="panel-footer">
-						<form method="POST" action="/comments/` + pID + `">
-							<fieldset>
-								<div class="form-group">
-									<input class="form-control" placeholder="Comment Here" name="content" value="">
-								</div>
-								<input class="btn btn-success btn-block" type="submit" name="send_comment" value="コメントを送信" />
-							</fieldset>
-						</form>
-					</div>
-				`)...)
-			}
-			contentsBuffer = append(contentsBuffer, `</div> </div>`...)
-		}
+		contentsBuffer := enmbedMyPage(products, user.ID == cUser.ID)
 		c.HTML(http.StatusOK, "mypage.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"User":        user,
@@ -254,15 +287,15 @@ func main() {
 		db.Exec("DELETE FROM histories WHERE id > 500000")
 
 		db.Exec("DELETE FROM paged_products")
-		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) "+
-			"SELECT "+
-			"products.id, "+
-			"(10000 - products.id) DIV 50, "+
-			"products.name, "+
-			"products.description, "+
-			"products.image_path, "+
-			"products.price, "+
-			"products.created_at "+
+		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) " +
+			"SELECT " +
+			"products.id, " +
+			"(10000 - products.id) DIV 50, " +
+			"products.name, " +
+			"products.description, " +
+			"products.image_path, " +
+			"products.price, " +
+			"products.created_at " +
 			"FROM products")
 		if err != nil {
 			c.Error(err)
@@ -270,14 +303,14 @@ func main() {
 		}
 
 		db.Exec("DELETE FROM paged_comments")
-		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) "+
-			"SELECT "+
-			"comments.id, "+
-			"(10000 - comments.product_id) DIV 50, "+
-			"comments.product_id, "+
-			"comments.user_id, "+
-			"comments.content, "+
-			"comments.created_at "+
+		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) " +
+			"SELECT " +
+			"comments.id, " +
+			"(10000 - comments.product_id) DIV 50, " +
+			"comments.product_id, " +
+			"comments.user_id, " +
+			"comments.content, " +
+			"comments.created_at " +
 			"FROM comments")
 		if err != nil {
 			c.Error(err)
