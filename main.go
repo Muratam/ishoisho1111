@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+
+	"html"
 	"html/template"
 	"net/http"
 	"os"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/sessions"
+
 	//"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -25,7 +28,7 @@ func main() {
 	dbname := "ishocon1"
 	db, _ = sql.Open("mysql", user+":"+pass+"@tcp("+db_server+":3306)/"+dbname)
 	db.SetMaxIdleConns(5)
-	gin.SetMode(gin.ReleaseMode)
+	//gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	// load templates
 	r.LoadHTMLGlob("templates/*")
@@ -135,23 +138,51 @@ func main() {
 			totalPay += p.Price
 		}
 
-		// shorten description
-		var sdProducts []Product
-		for _, p := range products {
+		var contentsBuffer []byte
+		for i, p := range products {
+			if i >= 30 {
+				break
+			}
 			if len(p.Description) > 210 {
 				p.Description = p.Description[:210] + "…"
 			}
-			//if utf8.RuneCountInString(p.Description) > 70 {
-			//	p.Description = string([]rune(p.Description)[:70]) + "…"
-			//}
-			sdProducts = append(sdProducts, p)
+			pID := strconv.Itoa(p.ID)
+			contentsBuffer = append(contentsBuffer, (`
+			<div class="col-md-4">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
+					</div>
+					<div class="panel-body">
+						<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
+						<h4>価格</h4>
+						<p>` + strconv.Itoa(p.Price) + `円</p>
+						<h4>商品説明</h4>
+						<p>` + html.EscapeString(p.Description) + `</p>
+						<h4>購入日時</h4>
+						<p>` + p.CreatedAt + `</p>
+					</div>
+			`)...)
+			if user.ID == cUser.ID {
+				contentsBuffer = append(contentsBuffer, (`
+					<div class="panel-footer">
+						<form method="POST" action="/comments/` + pID + `">
+							<fieldset>
+								<div class="form-group">
+									<input class="form-control" placeholder="Comment Here" name="content" value="">
+								</div>
+								<input class="btn btn-success btn-block" type="submit" name="send_comment" value="コメントを送信" />
+							</fieldset>
+						</form>
+					</div>
+				`)...)
+			}
+			contentsBuffer = append(contentsBuffer, `</div> </div>`...)
 		}
-
-		//r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/mypage.tmpl")))
 		c.HTML(http.StatusOK, "mypage.tmpl", gin.H{
 			"CurrentUser": cUser,
 			"User":        user,
-			"Products":    sdProducts,
+			"Contents":    template.HTML(contentsBuffer),
 			"TotalPay":    totalPay,
 		})
 	})
