@@ -71,16 +71,15 @@ func unsafeParseDate(date string) (time.Time, error) {
 
 // BuyingHistory : products which user had bought
 func (u *User) BuyingHistory() (products []Product) {
-	products = make([]Product, 0, 10000)
 	ps, ok := historyMap[u.ID]
 	if !ok {
 		return nil
 	}
-	for _, p := range ps {
-		products = append([]Product{p}, ps...)
+	products = make([]Product, len(ps))
+	for i, v := range ps {
+		products[len(ps) - i] = v
 	}
-
-	return
+	return products
 }
 
 // BuyProduct : buy product
