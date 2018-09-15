@@ -20,8 +20,56 @@ import (
 )
 
 var db *sql.DB
+var pagedProducts [][]PagedProductWithComments
+var pagedComments [][]PagedCommentWriter
 var productMap map[int]Product
 var historyMap map[int][]Product
+var users []User
+
+func initializePagedProduct() {
+	pagedProducts = make([][]PagedProductWithComments, 200)
+	rows, err := db.Query("SELECT * FROM paged_products ORDER BY id DESC")
+	if err != nil {
+		panic("Failed to initialize paged products: Failed to select paged products: " + err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p := PagedProductWithComments{}
+		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &p.CreatedAt)
+		if err != nil {
+			panic("Failed to initialize paged products: Failed to scan a product: " + err.Error())
+		}
+		p.Page = p.ID / 50
+		ps := pagedProducts[p.Page]
+		if ps == nil {
+			ps = make([]PagedProductWithComments, 0, 50)
+		}
+		pagedProducts[p.Page] = append(ps, p)
+	}
+}
+
+func initializePagedComments() {
+	pagedComments = make([][]PagedCommentWriter, 200)
+	rows, err := db.Query("SELECT c.product_id, c.content, u.name FROM paged_comments AS c "+
+		"INNER JOIN users AS u ON c.user_id = u.id ORDER BY c.created_at DESC")
+	if err != nil {
+		panic("Failed to initialize paged comments: Failed to select paged comments: " + err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		cw := PagedCommentWriter{}
+		err = rows.Scan(&cw.PID, &cw.Content, &cw.Writer)
+		if err != nil {
+			panic("Failed to initialize paged comments: Failed to scan a comment")
+		}
+		page := cw.PID / 50
+		cs := pagedComments[page]
+		if cs == nil {
+			cs = make([]PagedCommentWriter, 0, 100)
+		}
+		pagedComments[page] = append(cs, cw)
+	}
+}
 
 func initializeProdutMap() {
 	productMap = make(map[int]Product)
@@ -69,6 +117,22 @@ func initializeHistoryMap() {
 			ps = []Product{}
 		}
 		historyMap[h.UserID] = append(ps, h.Product)
+	}
+}
+
+func initializeUsers() {
+	users = make([]User, 5000)
+	rows, err := db.Query("SELECT * FROM users ORDER BY id ASC")
+	if err != nil {
+		panic("Failed to initialize users: Failed to select users: " + err.Error())
+	}
+	for rows.Next() {
+		u := User{}
+		err = rows.Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.LastLogin)
+		if err != nil {
+			panic("Failed to initialze users: Failed to scan a user: " + err.Error())
+		}
+		users = append(users, u)
 	}
 }
 
@@ -180,8 +244,11 @@ func main() {
 	db.SetMaxIdleConns(5)
 	gin.SetMode(gin.ReleaseMode)
 
+	initializePagedProduct()
+	initializePagedComments()
 	initializeHistoryMap()
 	initializeProdutMap()
+	initializeUsers()
 	r := gin.Default()
 	// load templates
 	r.LoadHTMLGlob("templates/*")
@@ -379,8 +446,11 @@ func main() {
 			return
 		}
 
+		initializePagedProduct()
+		initializePagedComments()
 		initializeHistoryMap()
 		initializeProdutMap()
+		initializeUsers()
 
 		c.String(http.StatusOK, "Finish")
 	})

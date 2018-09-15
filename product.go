@@ -31,6 +31,11 @@ type CommentWriter struct {
 	Writer  string
 }
 
+type PagedCommentWriter struct {
+	PID int
+	CommentWriter
+}
+
 func getProduct(pid int) Product {
 	p := Product{}
 	row := db.QueryRow("SELECT * FROM products WHERE id = ? LIMIT 1", pid)
@@ -43,63 +48,20 @@ func getProduct(pid int) Product {
 }
 
 func getProductsWithCommentsAt(page int) (ret []PagedProductWithComments) {
-	var err error
-	tx, err := db.Begin()
-	defer func(){
-		if err != nil {
-			tx.Rollback()
-		} else {
-			err = tx.Commit()
-			if err != nil {
-				ret = nil
-			}
-		}
-	}()
-
 	// select 50 products with offset page*50
-	products := []PagedProductWithComments{}
-	prows, err := tx.Query("SELECT * FROM paged_products WHERE page = ? ORDER BY id DESC", page)
-	if err != nil {
-		return nil
-	}
-
-	defer prows.Close()
-	for prows.Next() {
-		p := PagedProductWithComments{}
-		err = prows.Scan(&p.ID, &p.Page, &p.Name, &p.Description, &p.ImagePath, &p.Price, &p.CreatedAt)
-		if err != nil {
-			return nil
-		}
-		p.Comments = []CommentWriter{}
-		products = append(products, p)
-	}
+	products := pagedProducts[page]
 
 	productMap := make(map[int]PagedProductWithComments)
 	for _, p := range products {
 		productMap[p.ID] = p
 	}
 
-	crows, err := tx.Query("SELECT * FROM paged_comments AS c INNER JOIN users AS u ON c.user_id = u.id "+
-		"WHERE c.page = ? ORDER BY c.created_at DESC", page)
-	if err != nil {
-		return nil
-	}
-
-	defer crows.Close()
-	for crows.Next() {
-		var i int
-		var s string
-		var pid int
-		cw := CommentWriter{}
-		err = crows.Scan(&i, &i, &pid, &i, &cw.Content, &s, &i, &cw.Writer, &s, &s, &s)
-		if err != nil {
-			return nil
-		}
-
-		p := productMap[pid]
+	cs := pagedComments[page]
+	for _, c := range cs {
+		p := productMap[c.PID]
 		p.CommentCount += 1
 		if p.CommentCount <= 5 {
-			p.Comments = append(p.Comments, cw)
+			p.Comments = append(p.Comments, c.CommentWriter)
 		}
 		productMap[p.ID] = p
 	}

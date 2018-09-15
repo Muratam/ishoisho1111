@@ -104,8 +104,13 @@ func (u *User) CreateComment(pid string, content string) {
 	db.Exec(
 		"INSERT INTO paged_comments (page, product_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)",
 		(10000-ipid)/50, pid, u.ID, content, time.Now())
+	cs := pagedComments[ipid / 50]
+	name := users[u.ID - 1].Name
+	pagedComments[ipid / 50] = append(cs, PagedCommentWriter{ipid, CommentWriter{content, name}})
 }
 
 func (u *User) UpdateLastLogin() {
 	db.Exec("UPDATE users SET last_login = ? WHERE id = ?", time.Now(), u.ID)
+	fmt := "2006-01-02 15:04:05"
+	users[u.ID].LastLogin = time.Now().Format(fmt)
 }
