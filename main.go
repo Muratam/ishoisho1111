@@ -43,15 +43,14 @@ func initializeProdutMap() {
 
 func initializeHistoryMap() {
 	historyMap = make(map[int][]Product)
-	rows, err := db.Query("SELECT p.id, p.name, p.description, p.image_path, p.price, h.user_id, h.created_at "+
-		"FROM histories as h "+
-		"LEFT OUTER JOIN products as p "+
-		"ON h.product_id = p.id "+
+	rows, err := db.Query("SELECT p.id, p.name, p.description, p.image_path, p.price, h.user_id, h.created_at " +
+		"FROM histories as h " +
+		"INNER JOIN products as p " +
+		"ON h.product_id = p.id " +
 		"ORDER BY h.id DESC")
 	if err != nil {
 		panic("Failed to select histories: " + err.Error())
 	}
-
 
 	defer rows.Close()
 	for rows.Next() {
@@ -190,13 +189,19 @@ func main() {
 		products := user.BuyingHistory()
 
 		var totalPay int
-		for _, p := range products {
+		for i, p := range products {
+			if i == 0 {
+				continue
+			}
 			totalPay += p.Price
 		}
 
 		var contentsBuffer []byte
 		for i, p := range products {
-			if i >= 30 {
+			if i == 0 {
+				continue
+			}
+			if i >= 30+1 {
 				break
 			}
 			if len(p.Description) > 210 {
@@ -311,15 +316,15 @@ func main() {
 		db.Exec("DELETE FROM histories WHERE id > 500000")
 
 		db.Exec("DELETE FROM paged_products")
-		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) "+
-			"SELECT "+
-			"products.id, "+
-			"(10000 - products.id) DIV 50, "+
-			"products.name, "+
-			"products.description, "+
-			"products.image_path, "+
-			"products.price, "+
-			"products.created_at "+
+		_, err := db.Exec("INSERT INTO paged_products (id, page, `name`, description, image_path, price, created_at) " +
+			"SELECT " +
+			"products.id, " +
+			"(10000 - products.id) DIV 50, " +
+			"products.name, " +
+			"products.description, " +
+			"products.image_path, " +
+			"products.price, " +
+			"products.created_at " +
 			"FROM products")
 		if err != nil {
 			c.Error(err)
@@ -327,14 +332,14 @@ func main() {
 		}
 
 		db.Exec("DELETE FROM paged_comments")
-		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) "+
-			"SELECT "+
-			"comments.id, "+
-			"(10000 - comments.product_id) DIV 50, "+
-			"comments.product_id, "+
-			"comments.user_id, "+
-			"comments.content, "+
-			"comments.created_at "+
+		_, err = db.Exec("INSERT INTO paged_comments (id, page, product_id, user_id, content, created_at) " +
+			"SELECT " +
+			"comments.id, " +
+			"(10000 - comments.product_id) DIV 50, " +
+			"comments.product_id, " +
+			"comments.user_id, " +
+			"comments.content, " +
+			"comments.created_at " +
 			"FROM comments")
 		if err != nil {
 			c.Error(err)
