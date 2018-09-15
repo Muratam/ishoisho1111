@@ -35,7 +35,7 @@ func initializePagedProduct() {
 	defer rows.Close()
 	for rows.Next() {
 		p := PagedProductWithComments{}
-		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &p.CreatedAt)
+		err = rows.Scan(&p.ID, &p.Page, &p.Name, &p.Description, &p.ImagePath, &p.Price, &p.CreatedAt)
 		if err != nil {
 			panic("Failed to initialize paged products: Failed to scan a product: " + err.Error())
 		}
