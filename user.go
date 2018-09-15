@@ -16,6 +16,12 @@ type User struct {
 	LastLogin string
 }
 
+type History struct {
+	Product
+	UserID    int
+	CreatedAt string
+}
+
 func authenticate(email string, password string) (User, bool) {
 	var u User
 	err := db.QueryRow("SELECT * FROM users WHERE email = ? LIMIT 1", email).Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.LastLogin)
@@ -65,30 +71,12 @@ func unsafeParseDate(date string) (time.Time, error) {
 
 // BuyingHistory : products which user had bought
 func (u *User) BuyingHistory() (products []Product) {
-	rows, err := db.Query(
-		"SELECT p.id, p.name, p.description, p.image_path, p.price, h.created_at "+
-			"FROM histories as h "+
-			"LEFT OUTER JOIN products as p "+
-			"ON h.product_id = p.id "+
-			"WHERE h.user_id = ? "+
-			"ORDER BY h.id DESC", u.ID)
-	if err != nil {
+	ps, ok := historyMap[u.ID]
+	if !ok {
 		return nil
 	}
-
-	defer rows.Close()
-	for rows.Next() {
-		p := Product{}
-		var cAt string
-		fmt := "2006-01-02 15:04:05"
-		err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.ImagePath, &p.Price, &cAt)
-		// tmp, _ := time.Parse(fmt, cAt)
-		tmp, _ := unsafeParseDate(cAt)
-		p.CreatedAt = (tmp.Add(9 * time.Hour)).Format(fmt)
-		if err != nil {
-			panic(err.Error())
-		}
-		products = append(products, p)
+	for _, p := range ps {
+		products = append([]Product{p}, ps...)
 	}
 
 	return
@@ -99,6 +87,15 @@ func (u *User) BuyProduct(pid string) {
 	db.Exec(
 		"INSERT INTO histories (product_id, user_id, created_at) VALUES (?, ?, ?)",
 		pid, u.ID, time.Now())
+	ps, ok := historyMap[u.ID]
+	if !ok {
+		ps = []Product{}
+	}
+	ipid, _ := strconv.Atoi(pid)
+	p, _ := productMap[ipid]
+	fmt := "2006-01-02 15:04:05"
+	p.CreatedAt = (time.Now().Add(9 * time.Hour)).Format(fmt)
+	historyMap[u.ID] = append([]Product{p}, ps...)
 }
 
 // CreateComment : create comment to the product
