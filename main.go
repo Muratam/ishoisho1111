@@ -127,10 +127,7 @@ func embedIndexPage(products []PagedProductWithComments, loggedIn bool) []byte {
 func enmbedMyPage(products []Product, isMe bool) []byte {
 	var contentsBuffer []byte
 	for i, p := range products {
-		if i == 0 {
-			continue
-		}
-		if i >= 30+1 {
+		if i >= 30 {
 			break
 		}
 		if len(p.Description) > 210 {
@@ -272,10 +269,7 @@ func main() {
 		products := user.BuyingHistory()
 
 		var totalPay int
-		for i, p := range products {
-			if i == 0 {
-				continue
-			}
+		for _, p := range products {
 			totalPay += p.Price
 		}
 		contentsBuffer := enmbedMyPage(products, user.ID == cUser.ID)
