@@ -147,32 +147,32 @@ func main() {
 			}
 			pID := strconv.Itoa(p.ID)
 			contentsBuffer = append(contentsBuffer, (`
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
-				</div>
-				<div class="panel-body">
-					<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
-					<h4>価格</h4>
-					<p>` + strconv.Itoa(p.Price) + `円</p>
-					<h4>商品説明</h4>
-					<p>` + html.EscapeString(p.Description) + `</p>
-					<h4>購入日時</h4>
-					<p>` + p.CreatedAt + `</p>
-				</div>
-				<div class="col-md-4">
+			<div class="col-md-4">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<a href="/products/` + pID + `">` + html.EscapeString(p.Name) + `</a>
+					</div>
+					<div class="panel-body">
+						<a href="/products/` + pID + `"><img src="` + p.ImagePath + `" class="img-responsive" /></a>
+						<h4>価格</h4>
+						<p>` + strconv.Itoa(p.Price) + `円</p>
+						<h4>商品説明</h4>
+						<p>` + html.EscapeString(p.Description) + `</p>
+						<h4>購入日時</h4>
+						<p>` + p.CreatedAt + `</p>
+					</div>
 			`)...)
 			if user.ID == cUser.ID {
 				contentsBuffer = append(contentsBuffer, (`
 					<div class="panel-footer">
-					<form method="POST" action="/comments/` + pID + `">
-						<fieldset>
-							<div class="form-group">
-								<input class="form-control" placeholder="Comment Here" name="content" value="">
-							</div>
-							<input class="btn btn-success btn-block" type="submit" name="send_comment" value="コメントを送信" />
-						</fieldset>
-					</form>
+						<form method="POST" action="/comments/` + pID + `">
+							<fieldset>
+								<div class="form-group">
+									<input class="form-control" placeholder="Comment Here" name="content" value="">
+								</div>
+								<input class="btn btn-success btn-block" type="submit" name="send_comment" value="コメントを送信" />
+							</fieldset>
+						</form>
 					</div>
 				`)...)
 			}
